@@ -1,0 +1,30 @@
+﻿<ion-view view-title="VIN拍照" cache-view="false">
+    <ion-nav-buttons side="secondary">
+        <button class="button" ng-click="btnSaveClick()">
+            保存
+        </button>
+    </ion-nav-buttons>
+    <ion-content class="padding">
+        <div class="list">
+            <label class="item item-input">
+                <span class="input-label">VIN号码</span>
+                <span>{{viewState.vinCode}}</span>
+            </label>
+            <label class="item item-input item-select">
+                <span class="input-label">特殊情况</span>
+                <select ng-model="viewState.note" ng-options="item.NoteName for item in noteList" ></select>
+            </label>
+            <label class="item item-input" ng-show="viewState.note.NoteName == '其他（手工填写）'">
+                <span class="input-label">手工填写</span>
+                <input type="text" ng-model="viewState.customNoteName" />
+            </label>
+            <label class="item item-input">
+                <span class="input-label">VIN照片</span>
+                <input type="button" class="button button-positive" ng-click="vinPicture();" value="拍照" />
+            </label>
+            <label class="item item-image">
+                <img id="imgVIN" style="max-width:300px;" ng-src="{{viewState.vin_img_uri}}" />
+            </label>
+        </div>
+    </ion-content>
+</ion-view>
