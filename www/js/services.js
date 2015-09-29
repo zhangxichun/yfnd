@@ -169,8 +169,8 @@
         },
         //===============================================导出========================================================================
         getExportData: function (callback) {
-            SqliteHelper.execute("select shopcode,vincode,modelname,submodelname,stockage,saleflag,ifnull(photoname,'') as PhotoName,remark from answer where ProjectCode=? and shopcode=? and addchk='N'", [$rootScope.projectCode, $rootScope.shopCode], function (res1) {
-                SqliteHelper.execute("select shopcode,vincode,modelname,photoname,remark from answer where ProjectCode=? and shopcode=? and addchk='Y'", [$rootScope.projectCode, $rootScope.shopCode], function (res2) {
+            SqliteHelper.execute("select b.shopname as ShopCode,a.vincode,a.modelname,a.submodelname,a.stockage,a.saleflag,ifnull(a.photoname,'') as PhotoName,a.remark from answer as a join shop as b on a.shopcode=b.shopcode where a.ProjectCode=? and a.shopcode=? and a.addchk='N'", [$rootScope.projectCode, $rootScope.shopCode], function (res1) {
+                SqliteHelper.execute("select b.shopname as ShopCode,a.vincode,a.modelname,a.photoname,a.remark from answer as a join shop as b on a.shopcode=b.shopcode where a.ProjectCode=? and a.shopcode=? and a.addchk='Y'", [$rootScope.projectCode, $rootScope.shopCode], function (res2) {
                     callback(res1,res2);
                 });
             });

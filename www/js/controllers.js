@@ -1,5 +1,5 @@
 ﻿angular.module('starter.controllers', [])
-
+//登陆
 .controller('LoginCtrl', function ($scope, $rootScope, $state, $cordovaCamera, $cordovaFile, $cordovaSQLite, $cordovaSplashscreen, $ionicHistory, SqliteHelper, Login, FileHelper) {
     $rootScope.shopCode = '';
     $scope.viewState = { shopCode: '', shopName: '', password: '' };
@@ -68,7 +68,7 @@
         });
     };
 })
-
+//经销商库存表
 .controller('DashCtrl', function ($scope, $rootScope, $stateParams, $state, $cordovaCamera, $cordovaFile, $ionicLoading, FileHelper, Answer) {
     $scope.viewState = {
         searchText: $stateParams.searchText,
@@ -164,7 +164,7 @@
         }
     }
 })
-
+//经销商库存表详细
 .controller('DashDetailCtrl', function ($scope, $rootScope, $state, $stateParams, $cordovaCamera, $cordovaFile, $ionicLoading, $ionicHistory, FileHelper, Answer) {
     $scope.noteList = new Array();
     $scope.viewState = {
@@ -172,6 +172,9 @@
         note: {},
         customNoteName: '',
         vin_img_uri: 'img/ionic.png',
+        vinfp_img_uri: 'img/ionic.png',
+        vinPhotoUri: '',
+        vinfpPhotoUri: '',
         searchText: $stateParams.searchText,
         isAllVinCode: $stateParams.isAllVinCode == 'true' ? true : false,
         isUpdate: false
@@ -188,9 +191,15 @@
     Answer.initData($scope.viewState.vinCode, function (model) {
         if (model.PhotoName == '') {
             $scope.viewState.vin_img_uri = 'img/ionic.png';
+            $scope.viewState.vinfp_img_uri = 'img/ionic.png';
             $scope.viewState.isUpdate = false;
+        } else if (model.PhotoName.indexOf("_销售发票") >= 0) {
+            $scope.viewState.vin_img_uri = 'img/ionic.png';
+            $scope.viewState.vinfp_img_uri = cordova.file.externalRootDirectory + "英菲尼迪库存盘点/" + $rootScope.shopCode + "/经销商库存表/" + model.PhotoName + "?lastmod=" + (new Date()).toString();
+            $scope.viewState.isUpdate = true;
         } else {
             $scope.viewState.vin_img_uri = cordova.file.externalRootDirectory + "英菲尼迪库存盘点/" + $rootScope.shopCode + "/经销商库存表/" + model.PhotoName + "?lastmod=" + (new Date()).toString();
+            $scope.viewState.vinfp_img_uri = 'img/ionic.png';
             $scope.viewState.isUpdate = true;
         }
         if (model.Remark && model.Remark.length > 0) {
@@ -221,14 +230,41 @@
             encodingType: Camera.EncodingType.JPEG
         };
         $cordovaCamera.getPicture(options).then(function (imageURI) {
+            $scope.viewState.vinPhotoUri = imageURI;
             $scope.viewState.vin_img_uri = imageURI;
+            $scope.viewState.vinfpPhotoUri = "";
+            $scope.viewState.vinfp_img_uri = 'img/ionic.png' + "?lastmod=" + (new Date()).toString();
+            $scope.viewState.isUpdate = false;
+            $ionicLoading.hide();
+        }, function (err) { $ionicLoading.hide() });
+    };
+    $scope.vinfpPicture = function () {
+        $ionicLoading.show({
+            template: 'Loading...'
+        });
+        var options = {
+            quality: 100,
+            destinationType: Camera.DestinationType.FILE_URI,//Camera.DestinationType.DATA_URL,FILE_URI
+            sourceType: Camera.PictureSourceType.CAMERA,
+            encodingType: Camera.EncodingType.JPEG
+        };
+        $cordovaCamera.getPicture(options).then(function (imageURI) {
+            $scope.viewState.vinfpPhotoUri = imageURI;
+            $scope.viewState.vinfp_img_uri = imageURI;
+            $scope.viewState.vinPhotoUri = "";
+            $scope.viewState.vin_img_uri = 'img/ionic.png' + "?lastmod=" + (new Date()).toString();
+            $scope.viewState.isUpdate = false;
+            $scope.viewState.note.NoteName = '其他（手工填写）';
+            $scope.viewState.customNoteName = '车辆售出已开发票';
             $ionicLoading.hide();
         }, function (err) { $ionicLoading.hide() });
     };
     $scope.btnSaveClick = function () {
         var vinCode = $scope.viewState.vinCode;
+        var vinPhotoUri = $scope.viewState.vinPhotoUri;
+        var vinfpPhotoUri = $scope.viewState.vinfpPhotoUri;
 
-        var note = '';
+        var note = "";
         if ($scope.viewState.note.NoteName == '其他（手工填写）') {
             note = $scope.viewState.customNoteName;
         } else if ($scope.viewState.note.NoteName == '无') {
@@ -237,12 +273,7 @@
             note = $scope.viewState.note.NoteName;
         }
 
-        var vinPhotoUri = $scope.viewState.vin_img_uri;
-        //if (vinPhotoUri == 'img/ionic.png') {
-        //    alert('请对VIN号码拍照'); return;
-        //}
-
-        if (vinPhotoUri == 'img/ionic.png') {
+        if (vinPhotoUri == "" && vinfpPhotoUri == "") {
             Answer.saveVINPhotoNameAndNoteName(vinCode, note, '', function () {
                 alert('保存成功');
                 $ionicHistory.nextViewOptions({
@@ -251,9 +282,15 @@
                 $state.go('tab.dash', { searchText: $scope.viewState.searchText, isAllVinCode: $scope.viewState.isAllVinCode, timeStamp: (new Date()).toString() }, { reload: true });
             });
         } else {
-            var photoName = vinCode + '.jpg';
+            var photoName = "";
+            if (vinPhotoUri != "") {
+                photoName = vinCode + '.jpg';
+            }
+            else {
+                photoName = vinCode + '_销售发票' + '.jpg';
+            }
             Answer.saveVINPhotoNameAndNoteName(vinCode, note, photoName, function () {
-                url = vinPhotoUri.split("/");
+                url = vinPhotoUri != "" ? vinPhotoUri.split("/") : vinfpPhotoUri.split("/");
                 fileName = url[url.length - 1];
                 FileHelper.createDir(cordova.file.externalRootDirectory, "英菲尼迪库存盘点/" + $rootScope.shopCode + "/经销商库存表/", function () {
                     if ($scope.viewState.isUpdate) {
@@ -279,7 +316,7 @@
         }
     };
 })
-
+//在库不在系统
 .controller('ChatsCtrl', function ($scope, $rootScope, $cordovaCamera, $cordovaFile, $state, $ionicLoading, $stateParams, $ionicHistory, FileHelper, Answer) {
     $scope.viewState = {
         vinCode: '',
@@ -447,13 +484,16 @@
 .controller('ChatDetailCtrl', function ($scope, $stateParams, Chats) {
     $scope.chat = Chats.get($stateParams.chatId);
 })
-
+//结果导出
 .controller('AccountCtrl', function ($scope, Answer) {
     $scope.export = function () {
         try {
             Answer.getExportData(function (res1, res2) {
                 var answerList1 = new Array();
                 for (var i = 0; i < res1.rows.length; i++) {
+                    if (res1.rows.item(i).PhotoName.indexOf("_销售发票") >= 0) {
+                        res1.rows.item(i).PhotoName = "";
+                    }
                     answerList1.push(res1.rows.item(i));
                 }
                 var answerList2 = new Array();

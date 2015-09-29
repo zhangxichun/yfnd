@@ -15,29 +15,16 @@
             </li>
         </ul>
         <ul class="list">
-            <!--<li class="item row" >
-                <div class="col col-10" style="text-align:center;"><input type="button" class="button button-small " value="拍照"/></div>
-                <div class="col col-33" style="text-align:center;line-height: 31px;">1234</div>
-                <div class="col" style="text-align:center;line-height: 31px;">1234</div>
-            </li>-->
             <div class="item item-divider row">
                 <div class="col col-10" style="text-align:center">#</div>
                 <div class="col col-33" style="text-align:center">简码</div>
                 <div class="col" style="text-align:center">VIN号码</div>
             </div>
             <li class="item row" ng-style="item.Style" ng-repeat="item in vinCodeList | filter:viewState.searchText" ng-click="itemClick(item,$event)">
-                <!--<div class="col col-10" ng-show="item.AddChk=='N'" style="text-align:center;"><input type="button" class="button button-positive button-small " value="拍照" ng-click="btnClick(item.VinCode)" /></div>
-                <div class="col col-10" ng-show="item.AddChk=='Y'" style="text-align:center;"><input type="button" class="button button-small " value="拍照" /></div>-->
                 <div class="col col-10" style="text-align: center; line-height: 31px;">{{$index+1}}</div>
                 <div class="col col-33" style="text-align:center;line-height: 31px;">{{item.VinCode8}}</div>
                 <div class="col" style="text-align:center;line-height: 31px;">{{item.VinCode}}</div>
             </li>
         </ul>
-        <!--<ion-list>
-              <ion-item collection-repeat="item in vinCodeList">
-                  <input type="button" class="button button-positive button-small " value="拍照" ng-click="btnClick(item.VinCode,viewState.isAllVinCode)"/>
-                {{item.VinCode8}}|{{item.VinCode}}
-          </ion-item>
-        </ion-list>-->
     </ion-content>
 </ion-view>
