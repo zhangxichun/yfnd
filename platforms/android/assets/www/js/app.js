@@ -112,6 +112,8 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', '
     // if none of the above states are matched, use this as the fallback
     $urlRouterProvider.otherwise('login');
 
+    $ionicConfigProvider.views.transition("none");
+    $ionicConfigProvider.tabs.style('standard');
     $ionicConfigProvider.tabs.position('bottom');
     $ionicConfigProvider.backButton.text('返回');
 });

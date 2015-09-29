@@ -220,6 +220,17 @@ module.exports = [
         "clobbers": [
             "excel"
         ]
+    },
+    {
+        "file": "plugins/cordova-plugin-x-toast/www/Toast.js",
+        "id": "cordova-plugin-x-toast.Toast",
+        "clobbers": [
+            "window.plugins.toast"
+        ]
+    },
+    {
+        "file": "plugins/cordova-plugin-x-toast/test/tests.js",
+        "id": "cordova-plugin-x-toast.tests"
     }
 ];
 module.exports.metadata = 
@@ -234,7 +245,8 @@ module.exports.metadata =
     "cordova-plugin-file": "2.0.0",
     "io.litehelpers.cordova.sqlite": "0.7.10-dev",
     "me.rahul.plugins.sqlDB": "1.0.3",
-    "com.yrtech.excel": "1.0.0"
+    "com.yrtech.excel": "1.0.0",
+    "cordova-plugin-x-toast": "2.2.0"
 }
 // BOTTOM OF METADATA
 });

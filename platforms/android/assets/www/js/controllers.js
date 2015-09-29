@@ -1,6 +1,6 @@
 ﻿angular.module('starter.controllers', [])
 //登陆
-.controller('LoginCtrl', function ($scope, $rootScope, $state, $cordovaCamera, $cordovaFile, $cordovaSQLite, $cordovaSplashscreen, $ionicHistory, SqliteHelper, Login, FileHelper) {
+.controller('LoginCtrl', function ($scope, $rootScope, $state, $cordovaCamera, $cordovaFile, $cordovaSQLite, $cordovaSplashscreen, $cordovaToast, $ionicHistory, SqliteHelper, Login, FileHelper) {
     $rootScope.shopCode = '';
     $scope.viewState = { shopCode: '', shopName: '', password: '' };
     $scope.project = {};
@@ -59,11 +59,11 @@
                     $state.go('tab.dash', { searchText: '', isAllVinCode: false });
                 }
                 else {
-                    alert("密码错误");
+                    $cordovaToast.showShortCenter('密码错误');
                 }
             }
             else {
-                alert("该经销商不存在");
+                $cordovaToast.showShortCenter('该经销商不存在');
             }
         });
     };
@@ -165,7 +165,7 @@
     }
 })
 //经销商库存表详细
-.controller('DashDetailCtrl', function ($scope, $rootScope, $state, $stateParams, $cordovaCamera, $cordovaFile, $ionicLoading, $ionicHistory, FileHelper, Answer) {
+.controller('DashDetailCtrl', function ($scope, $rootScope, $state, $stateParams, $cordovaCamera, $cordovaFile, $cordovaToast, $ionicLoading, $ionicHistory, FileHelper, Answer) {
     $scope.noteList = new Array();
     $scope.viewState = {
         vinCode: $stateParams.vinCode,
@@ -177,7 +177,7 @@
         vinfpPhotoUri: '',
         searchText: $stateParams.searchText,
         isAllVinCode: $stateParams.isAllVinCode == 'true' ? true : false,
-        isUpdate: false
+        isUpdate: true
     };
 
     Answer.getAllNoteA(function (res) {
@@ -189,18 +189,15 @@
         $scope.viewState.note = $scope.noteList[0];
     });
     Answer.initData($scope.viewState.vinCode, function (model) {
-        if (model.PhotoName == '') {
-            $scope.viewState.vin_img_uri = 'img/ionic.png';
-            $scope.viewState.vinfp_img_uri = 'img/ionic.png';
-            $scope.viewState.isUpdate = false;
-        } else if (model.PhotoName.indexOf("_销售发票") >= 0) {
-            $scope.viewState.vin_img_uri = 'img/ionic.png';
+        if (model.PhotoName == null || model.PhotoName == "") {
+
+        }
+        else if (model.PhotoName.indexOf("_销售发票") >= 0) {
             $scope.viewState.vinfp_img_uri = cordova.file.externalRootDirectory + "英菲尼迪库存盘点/" + $rootScope.shopCode + "/经销商库存表/" + model.PhotoName + "?lastmod=" + (new Date()).toString();
-            $scope.viewState.isUpdate = true;
+            $scope.viewState.vinfpPhotoUri = cordova.file.externalRootDirectory + "英菲尼迪库存盘点/" + $rootScope.shopCode + "/经销商库存表/" + model.PhotoName;
         } else {
             $scope.viewState.vin_img_uri = cordova.file.externalRootDirectory + "英菲尼迪库存盘点/" + $rootScope.shopCode + "/经销商库存表/" + model.PhotoName + "?lastmod=" + (new Date()).toString();
-            $scope.viewState.vinfp_img_uri = 'img/ionic.png';
-            $scope.viewState.isUpdate = true;
+            $scope.viewState.vinPhotoUri = cordova.file.externalRootDirectory + "英菲尼迪库存盘点/" + $rootScope.shopCode + "/经销商库存表/" + model.PhotoName;
         }
         if (model.Remark && model.Remark.length > 0) {
             var matched = false;
@@ -227,7 +224,8 @@
             quality: 100,
             destinationType: Camera.DestinationType.FILE_URI,//Camera.DestinationType.DATA_URL,FILE_URI
             sourceType: Camera.PictureSourceType.CAMERA,
-            encodingType: Camera.EncodingType.JPEG
+            encodingType: Camera.EncodingType.JPEG,
+            correctOrientation: true
         };
         $cordovaCamera.getPicture(options).then(function (imageURI) {
             $scope.viewState.vinPhotoUri = imageURI;
@@ -246,7 +244,8 @@
             quality: 100,
             destinationType: Camera.DestinationType.FILE_URI,//Camera.DestinationType.DATA_URL,FILE_URI
             sourceType: Camera.PictureSourceType.CAMERA,
-            encodingType: Camera.EncodingType.JPEG
+            encodingType: Camera.EncodingType.JPEG,
+            correctOrientation: true
         };
         $cordovaCamera.getPicture(options).then(function (imageURI) {
             $scope.viewState.vinfpPhotoUri = imageURI;
@@ -275,7 +274,7 @@
 
         if (vinPhotoUri == "" && vinfpPhotoUri == "") {
             Answer.saveVINPhotoNameAndNoteName(vinCode, note, '', function () {
-                alert('保存成功');
+                $cordovaToast.showShortBottom('保存成功');
                 $ionicHistory.nextViewOptions({
                     disableBack: true
                 });
@@ -283,18 +282,21 @@
             });
         } else {
             var photoName = "";
+            var removePhotoName = "";
             if (vinPhotoUri != "") {
                 photoName = vinCode + '.jpg';
+                removePhotoName = vinCode + '_销售发票' + '.jpg';
             }
             else {
                 photoName = vinCode + '_销售发票' + '.jpg';
+                removePhotoName = vinCode + '.jpg';
             }
             Answer.saveVINPhotoNameAndNoteName(vinCode, note, photoName, function () {
                 url = vinPhotoUri != "" ? vinPhotoUri.split("/") : vinfpPhotoUri.split("/");
                 fileName = url[url.length - 1];
                 FileHelper.createDir(cordova.file.externalRootDirectory, "英菲尼迪库存盘点/" + $rootScope.shopCode + "/经销商库存表/", function () {
                     if ($scope.viewState.isUpdate) {
-                        alert('保存成功');
+                        $cordovaToast.showShortBottom('保存成功');
                         $ionicHistory.nextViewOptions({
                             disableBack: true
                         });
@@ -302,11 +304,20 @@
                     } else {
                         $cordovaFile.moveFile(cordova.file.externalApplicationStorageDirectory + "cache/", fileName, cordova.file.externalRootDirectory + "英菲尼迪库存盘点/" + $rootScope.shopCode + "/经销商库存表", photoName)
                                     .then(function (success) {
-                                        alert('保存成功');
-                                        $ionicHistory.nextViewOptions({
-                                            disableBack: true
-                                        });
-                                        $state.go('tab.dash', { searchText: $scope.viewState.searchText, isAllVinCode: $scope.viewState.isAllVinCode, timeStamp: (new Date()).toString() }, { reload: true });
+                                        $cordovaFile.removeFile(cordova.file.externalRootDirectory + "英菲尼迪库存盘点/" + $rootScope.shopCode + "/经销商库存表", removePhotoName)
+                                        .then(function (success) {
+                                            $cordovaToast.showShortBottom('保存成功');
+                                            $ionicHistory.nextViewOptions({
+                                                disableBack: true
+                                            });
+                                            $state.go('tab.dash', { searchText: $scope.viewState.searchText, isAllVinCode: $scope.viewState.isAllVinCode, timeStamp: (new Date()).toString() }, { reload: true });
+                                        }, function (err) {
+                                            $cordovaToast.showShortBottom('保存成功');
+                                            $ionicHistory.nextViewOptions({
+                                                disableBack: true
+                                            });
+                                            $state.go('tab.dash', { searchText: $scope.viewState.searchText, isAllVinCode: $scope.viewState.isAllVinCode, timeStamp: (new Date()).toString() }, { reload: true });
+                                        })
                                     });
                     }
                 }, function (error) {
@@ -317,7 +328,7 @@
     };
 })
 //在库不在系统
-.controller('ChatsCtrl', function ($scope, $rootScope, $cordovaCamera, $cordovaFile, $state, $ionicLoading, $stateParams, $ionicHistory, FileHelper, Answer) {
+.controller('ChatsCtrl', function ($scope, $rootScope, $cordovaCamera, $cordovaFile, $cordovaToast, $state, $ionicLoading, $stateParams, $ionicHistory, FileHelper, Answer) {
     $scope.viewState = {
         vinCode: '',
         carType: {},
@@ -413,19 +424,19 @@
         }
 
         if (vinCode.length != 17) {
-            alert('VIN号码格式不正确'); return;
+            $cordovaToast.showShortCenter('VIN号码格式不正确'); return;
         }
         if (carType == "选择") {
-            alert('请选择车型'); return;
+            $cordovaToast.showShortCenter('请选择车型'); return;
         }
         if ($scope.viewState.note.NoteName != '无' && note == '') {
-            alert('请手工填写备注'); return;
+            $cordovaToast.showShortCenter('请手工填写备注'); return;
         }
         if (vinPhotoUri == '') {
-            alert('请对VIN号码拍照'); return;
+            $cordovaToast.showShortCenter('请对VIN号码拍照'); return;
         }
         if (carPhotoUri == '') {
-            alert('请对车尾拍照'); return;
+            $cordovaToast.showShortCenter('请对车尾拍照'); return;
         }
 
         var vinPhotoName = vinCode + '.jpg';
@@ -450,7 +461,7 @@
                                                         fileName = url[url.length - 1];
                                                         $cordovaFile.moveFile(cordova.file.externalApplicationStorageDirectory + "cache/", fileName, cordova.file.externalRootDirectory + "英菲尼迪库存盘点/" + $rootScope.shopCode + "/在库未在系统统计表", vinfpPhotoName)
                                                                     .then(function (success) {
-                                                                        alert(msg);
+                                                                        $cordovaToast.showShortBottom('保存成功');
                                                                         $ionicHistory.nextViewOptions({
                                                                             disableAnimate: true,
                                                                             disableBack: true
@@ -460,7 +471,7 @@
                                                                         alert(error);
                                                                     });
                                                     } else {
-                                                        alert(msg);
+                                                        $cordovaToast.showShortBottom('保存成功');
                                                         $ionicHistory.nextViewOptions({
                                                             disableAnimate: true,
                                                             disableBack: true
@@ -485,7 +496,7 @@
     $scope.chat = Chats.get($stateParams.chatId);
 })
 //结果导出
-.controller('AccountCtrl', function ($scope, Answer) {
+.controller('AccountCtrl', function ($scope, $cordovaToast, Answer) {
     $scope.export = function () {
         try {
             Answer.getExportData(function (res1, res2) {
@@ -502,7 +513,7 @@
                 }
 
                 window.echo([answerList1, answerList2], function (echoValue) {
-                    alert('导出成功\n' + '文件名：\n' + echoValue); // should alert true.
+                    $cordovaToast.showLongCenter('导出成功\n' + '文件名：\n' + echoValue);
                 });
             });
         } catch (e) {
