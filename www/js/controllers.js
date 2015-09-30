@@ -2,6 +2,7 @@
 //登陆
 .controller('LoginCtrl', function ($scope, $rootScope, $state, $cordovaCamera, $cordovaFile, $cordovaSQLite, $cordovaSplashscreen, $cordovaToast, $ionicHistory, SqliteHelper, Login, FileHelper) {
     $rootScope.shopCode = '';
+    $rootScope.shopName = '';
     $scope.viewState = { shopCode: '', shopName: '', password: '' };
     $scope.project = {};
     $scope.projects = new Array();
@@ -39,11 +40,12 @@
         });
     };
 
-    $scope.login = function (shopCode, password, projectCode) {
+    $scope.login = function (shopCode,shopName, password, projectCode) {
         Login.tryLogin(shopCode, password, projectCode, function (res) {
             if (res.rows.length > 0) {
                 if (res.rows.item(0).Password == password) {
                     $rootScope.shopCode = shopCode;
+                    $rootScope.shopName = shopName;
                     $rootScope.projectCode = projectCode;
 
                     if (typeof (Storage) !== "undefined") {
@@ -71,7 +73,7 @@
 //经销商库存表
 .controller('DashCtrl', function ($scope, $rootScope, $stateParams, $state, $cordovaCamera, $cordovaFile, $ionicLoading, FileHelper, Answer) {
     $scope.viewState = {
-        searchText: $stateParams.searchText,
+        searchText: {VinCode8: $stateParams.searchText},
         isAllVinCode: $stateParams.isAllVinCode == 'true' ? true : false
     };
     $scope.vinCodeList = new Array();
@@ -115,7 +117,7 @@
                 template: 'Loading...'
             });
             setTimeout(function () {
-                $state.go('tab.dash-detail', { vinCode: vinCode, searchText: $scope.viewState.searchText, isAllVinCode: $scope.viewState.isAllVinCode }, { reload: true });
+                $state.go('tab.dash-detail', { vinCode: vinCode, searchText: $scope.viewState.searchText.VinCode8, isAllVinCode: $scope.viewState.isAllVinCode }, { reload: true });
             }, 1000);
         } else {
             var vinCode = item.VinCode;
@@ -138,8 +140,8 @@
         function onSuccess_for_file(imageURI) {
             url = imageURI.split("/");
             fileName = url[url.length - 1];
-            FileHelper.createDir(cordova.file.externalRootDirectory, "英菲尼迪库存盘点/" + $rootScope.shopCode + "/经销商库存表/", function () {
-                $cordovaFile.moveFile(cordova.file.externalApplicationStorageDirectory + "cache/", fileName, cordova.file.externalRootDirectory + "英菲尼迪库存盘点/" + $rootScope.shopCode + "/经销商库存表", vinCode + '.jpg')
+            FileHelper.createDir(cordova.file.externalRootDirectory, "英菲尼迪库存盘点/" + $rootScope.projectCode + "/" + $rootScope.shopCode + $rootScope.shopName + "/经销商库存表/", function () {
+                $cordovaFile.moveFile(cordova.file.externalApplicationStorageDirectory + "cache/", fileName, cordova.file.externalRootDirectory + "英菲尼迪库存盘点/" + $rootScope.projectCode + "/" + $rootScope.shopCode + $rootScope.shopName + "/经销商库存表", vinCode + '.jpg')
                             .then(function (success) {
                                 Answer.saveVINPhotoName(vinCode, vinCode + '.jpg', function () {
                                     Answer.getAllVinCode($scope.viewState.isAllVinCode, function (res) {
@@ -192,11 +194,11 @@
 
         }
         else if (model.PhotoName.indexOf("_销售发票") >= 0) {
-            $scope.viewState.vinfp_img_uri = cordova.file.externalRootDirectory + "英菲尼迪库存盘点/" + $rootScope.shopCode + "/经销商库存表/" + model.PhotoName + "?lastmod=" + (new Date()).toString();
-            $scope.viewState.vinfpPhotoUri = cordova.file.externalRootDirectory + "英菲尼迪库存盘点/" + $rootScope.shopCode + "/经销商库存表/" + model.PhotoName;
+            $scope.viewState.vinfp_img_uri = cordova.file.externalRootDirectory + "英菲尼迪库存盘点/" + $rootScope.projectCode + "/" + $rootScope.shopCode + $rootScope.shopName + "/经销商库存表/" + model.PhotoName + "?lastmod=" + (new Date()).toString();
+            $scope.viewState.vinfpPhotoUri = cordova.file.externalRootDirectory + "英菲尼迪库存盘点/" + $rootScope.projectCode + "/" + $rootScope.shopCode + $rootScope.shopName + "/经销商库存表/" + model.PhotoName;
         } else {
-            $scope.viewState.vin_img_uri = cordova.file.externalRootDirectory + "英菲尼迪库存盘点/" + $rootScope.shopCode + "/经销商库存表/" + model.PhotoName + "?lastmod=" + (new Date()).toString();
-            $scope.viewState.vinPhotoUri = cordova.file.externalRootDirectory + "英菲尼迪库存盘点/" + $rootScope.shopCode + "/经销商库存表/" + model.PhotoName;
+            $scope.viewState.vin_img_uri = cordova.file.externalRootDirectory + "英菲尼迪库存盘点/" + $rootScope.projectCode + "/" + $rootScope.shopCode + $rootScope.shopName + "/经销商库存表/" + model.PhotoName + "?lastmod=" + (new Date()).toString();
+            $scope.viewState.vinPhotoUri = cordova.file.externalRootDirectory + "英菲尼迪库存盘点/" + $rootScope.projectCode + "/" + $rootScope.shopCode + $rootScope.shopName + "/经销商库存表/" + model.PhotoName;
         }
         if (model.Remark && model.Remark.length > 0) {
             var matched = false;
@@ -293,7 +295,7 @@
             Answer.saveVINPhotoNameAndNoteName(vinCode, note, photoName, function () {
                 url = vinPhotoUri != "" ? vinPhotoUri.split("/") : vinfpPhotoUri.split("/");
                 fileName = url[url.length - 1];
-                FileHelper.createDir(cordova.file.externalRootDirectory, "英菲尼迪库存盘点/" + $rootScope.shopCode + "/经销商库存表/", function () {
+                FileHelper.createDir(cordova.file.externalRootDirectory, "英菲尼迪库存盘点/" + $rootScope.projectCode + "/" + $rootScope.shopCode + $rootScope.shopName + "/经销商库存表/", function () {
                     if ($scope.viewState.isUpdate) {
                         $cordovaToast.showShortBottom('保存成功');
                         $ionicHistory.nextViewOptions({
@@ -301,9 +303,9 @@
                         });
                         $state.go('tab.dash', { searchText: $scope.viewState.searchText, isAllVinCode: $scope.viewState.isAllVinCode, timeStamp: (new Date()).toString() }, { reload: true });
                     } else {
-                        $cordovaFile.moveFile(cordova.file.externalApplicationStorageDirectory + "cache/", fileName, cordova.file.externalRootDirectory + "英菲尼迪库存盘点/" + $rootScope.shopCode + "/经销商库存表", photoName)
+                        $cordovaFile.moveFile(cordova.file.externalApplicationStorageDirectory + "cache/", fileName, cordova.file.externalRootDirectory + "英菲尼迪库存盘点/" + $rootScope.projectCode + "/" + $rootScope.shopCode + $rootScope.shopName + "/经销商库存表", photoName)
                                     .then(function (success) {
-                                        $cordovaFile.removeFile(cordova.file.externalRootDirectory + "英菲尼迪库存盘点/" + $rootScope.shopCode + "/经销商库存表", removePhotoName)
+                                        $cordovaFile.removeFile(cordova.file.externalRootDirectory + "英菲尼迪库存盘点/" + $rootScope.projectCode + "/" + $rootScope.shopCode + $rootScope.shopName + "/经销商库存表", removePhotoName)
                                         .then(function (success) {
                                             $cordovaToast.showShortBottom('保存成功');
                                             $ionicHistory.nextViewOptions({
@@ -466,37 +468,36 @@
         var vinfpPhotoName = vinfpPhotoUri == '' ? '' : vinCode + '_销售发票' + '.jpg';
         Answer.saveVINCode(vinCode, carType, note, vinPhotoName, carPhotoName, vinfpPhotoName, function (msg) {
             if (msg == '保存成功') {
-                FileHelper.createDir(cordova.file.externalRootDirectory, "英菲尼迪库存盘点/" + $rootScope.shopCode + "/在库未在系统统计表/", function () {
+                FileHelper.createDir(cordova.file.externalRootDirectory, "英菲尼迪库存盘点/" + $rootScope.projectCode + "/" + $rootScope.shopCode + $rootScope.shopName + "/在库未在系统统计表/", function () {
                     //copy vinPhoto to sdcard
                     var url = vinPhotoUri.split("/");
                     var fileName = url[url.length - 1];
-                    $cordovaFile.moveFile(cordova.file.externalApplicationStorageDirectory + "cache/", fileName, cordova.file.externalRootDirectory + "英菲尼迪库存盘点/" + $rootScope.shopCode + "/在库未在系统统计表", vinPhotoName)
+                    $cordovaFile.moveFile(cordova.file.externalApplicationStorageDirectory + "cache/", fileName, cordova.file.externalRootDirectory + "英菲尼迪库存盘点/" + $rootScope.projectCode + "/" + $rootScope.shopCode + $rootScope.shopName + "/在库未在系统统计表", vinPhotoName)
                                 .then(function (success) {
                                     //copy carPhoto to sdcard
                                     url = carPhotoUri.split("/");
                                     fileName = url[url.length - 1];
-                                    $cordovaFile.moveFile(cordova.file.externalApplicationStorageDirectory + "cache/", fileName, cordova.file.externalRootDirectory + "英菲尼迪库存盘点/" + $rootScope.shopCode + "/在库未在系统统计表", carPhotoName)
+                                    $cordovaFile.moveFile(cordova.file.externalApplicationStorageDirectory + "cache/", fileName, cordova.file.externalRootDirectory + "英菲尼迪库存盘点/" + $rootScope.projectCode + "/" + $rootScope.shopCode + $rootScope.shopName + "/在库未在系统统计表", carPhotoName)
                                                 .then(function (success) {
                                                     if (vinfpPhotoUri != '') {
                                                         //copy vinfpPhoto to sdcard
                                                         url = vinfpPhotoUri.split("/");
                                                         fileName = url[url.length - 1];
-                                                        $cordovaFile.moveFile(cordova.file.externalApplicationStorageDirectory + "cache/", fileName, cordova.file.externalRootDirectory + "英菲尼迪库存盘点/" + $rootScope.shopCode + "/在库未在系统统计表", vinfpPhotoName)
+                                                        $cordovaFile.moveFile(cordova.file.externalApplicationStorageDirectory + "cache/", fileName, cordova.file.externalRootDirectory + "英菲尼迪库存盘点/" + $rootScope.projectCode + "/" + $rootScope.shopCode + $rootScope.shopName + "/在库未在系统统计表", vinfpPhotoName)
                                                                     .then(function (success) {
                                                                         $cordovaToast.showShortBottom('保存成功');
                                                                         $ionicHistory.nextViewOptions({
                                                                             disableAnimate: true,
                                                                             disableBack: true
                                                                         });
-                                                                        $state.go('tab.chats', { vinCode: vinCode }, { reload: true });
+                                                                        $state.go('tab.chats', { vinCode: '0' }, { reload: true });
                                                                     }, function (error) {
-                                                                        //alert(error);
                                                                         $cordovaToast.showShortBottom('保存成功');
                                                                         $ionicHistory.nextViewOptions({
                                                                             disableAnimate: true,
                                                                             disableBack: true
                                                                         });
-                                                                        $state.go('tab.chats', { vinCode: vinCode }, { reload: true });
+                                                                        $state.go('tab.chats', { vinCode: '0' }, { reload: true });
                                                                     });
                                                     } else {
                                                         $cordovaToast.showShortBottom('保存成功');
@@ -504,30 +505,28 @@
                                                             disableAnimate: true,
                                                             disableBack: true
                                                         });
-                                                        $state.go('tab.chats', { vinCode: vinCode }, { reload: true });
+                                                        $state.go('tab.chats', { vinCode: '0' }, { reload: true });
                                                     }
                                                 }, function (error) {
-                                                    //alert(error);
                                                     if (vinfpPhotoUri != '') {
                                                         //copy vinfpPhoto to sdcard
                                                         url = vinfpPhotoUri.split("/");
                                                         fileName = url[url.length - 1];
-                                                        $cordovaFile.moveFile(cordova.file.externalApplicationStorageDirectory + "cache/", fileName, cordova.file.externalRootDirectory + "英菲尼迪库存盘点/" + $rootScope.shopCode + "/在库未在系统统计表", vinfpPhotoName)
+                                                        $cordovaFile.moveFile(cordova.file.externalApplicationStorageDirectory + "cache/", fileName, cordova.file.externalRootDirectory + "英菲尼迪库存盘点/" + $rootScope.projectCode + "/" + $rootScope.shopCode + $rootScope.shopName + "/在库未在系统统计表", vinfpPhotoName)
                                                                     .then(function (success) {
                                                                         $cordovaToast.showShortBottom('保存成功');
                                                                         $ionicHistory.nextViewOptions({
                                                                             disableAnimate: true,
                                                                             disableBack: true
                                                                         });
-                                                                        $state.go('tab.chats', { vinCode: vinCode }, { reload: true });
+                                                                        $state.go('tab.chats', { vinCode: '0' }, { reload: true });
                                                                     }, function (error) {
-                                                                        //alert(error);
                                                                         $cordovaToast.showShortBottom('保存成功');
                                                                         $ionicHistory.nextViewOptions({
                                                                             disableAnimate: true,
                                                                             disableBack: true
                                                                         });
-                                                                        $state.go('tab.chats', { vinCode: vinCode }, { reload: true });
+                                                                        $state.go('tab.chats', { vinCode: '0' }, { reload: true });
                                                                     });
                                                     } else {
                                                         $cordovaToast.showShortBottom('保存成功');
@@ -535,36 +534,34 @@
                                                             disableAnimate: true,
                                                             disableBack: true
                                                         });
-                                                        $state.go('tab.chats', { vinCode: vinCode }, { reload: true });
+                                                        $state.go('tab.chats', { vinCode: '0' }, { reload: true });
                                                     }
                                                 });
                                 }, function (error) {
-                                    //alert(error);
                                     //copy carPhoto to sdcard
                                     url = carPhotoUri.split("/");
                                     fileName = url[url.length - 1];
-                                    $cordovaFile.moveFile(cordova.file.externalApplicationStorageDirectory + "cache/", fileName, cordova.file.externalRootDirectory + "英菲尼迪库存盘点/" + $rootScope.shopCode + "/在库未在系统统计表", carPhotoName)
+                                    $cordovaFile.moveFile(cordova.file.externalApplicationStorageDirectory + "cache/", fileName, cordova.file.externalRootDirectory + "英菲尼迪库存盘点/" + $rootScope.projectCode + "/" + $rootScope.shopCode + $rootScope.shopName + "/在库未在系统统计表", carPhotoName)
                                                 .then(function (success) {
                                                     if (vinfpPhotoUri != '') {
                                                         //copy vinfpPhoto to sdcard
                                                         url = vinfpPhotoUri.split("/");
                                                         fileName = url[url.length - 1];
-                                                        $cordovaFile.moveFile(cordova.file.externalApplicationStorageDirectory + "cache/", fileName, cordova.file.externalRootDirectory + "英菲尼迪库存盘点/" + $rootScope.shopCode + "/在库未在系统统计表", vinfpPhotoName)
+                                                        $cordovaFile.moveFile(cordova.file.externalApplicationStorageDirectory + "cache/", fileName, cordova.file.externalRootDirectory + "英菲尼迪库存盘点/" + $rootScope.projectCode + "/" + $rootScope.shopCode + $rootScope.shopName + "/在库未在系统统计表", vinfpPhotoName)
                                                                     .then(function (success) {
                                                                         $cordovaToast.showShortBottom('保存成功');
                                                                         $ionicHistory.nextViewOptions({
                                                                             disableAnimate: true,
                                                                             disableBack: true
                                                                         });
-                                                                        $state.go('tab.chats', { vinCode: vinCode }, { reload: true });
+                                                                        $state.go('tab.chats', { vinCode: '0' }, { reload: true });
                                                                     }, function (error) {
-                                                                        //alert(error);
                                                                         $cordovaToast.showShortBottom('保存成功');
                                                                         $ionicHistory.nextViewOptions({
                                                                             disableAnimate: true,
                                                                             disableBack: true
                                                                         });
-                                                                        $state.go('tab.chats', { vinCode: vinCode }, { reload: true });
+                                                                        $state.go('tab.chats', { vinCode: '0' }, { reload: true });
                                                                     });
                                                     } else {
                                                         $cordovaToast.showShortBottom('保存成功');
@@ -572,30 +569,28 @@
                                                             disableAnimate: true,
                                                             disableBack: true
                                                         });
-                                                        $state.go('tab.chats', { vinCode: vinCode }, { reload: true });
+                                                        $state.go('tab.chats', { vinCode: '0' }, { reload: true });
                                                     }
                                                 }, function (error) {
-                                                    //alert(error);
                                                     if (vinfpPhotoUri != '') {
                                                         //copy vinfpPhoto to sdcard
                                                         url = vinfpPhotoUri.split("/");
                                                         fileName = url[url.length - 1];
-                                                        $cordovaFile.moveFile(cordova.file.externalApplicationStorageDirectory + "cache/", fileName, cordova.file.externalRootDirectory + "英菲尼迪库存盘点/" + $rootScope.shopCode + "/在库未在系统统计表", vinfpPhotoName)
+                                                        $cordovaFile.moveFile(cordova.file.externalApplicationStorageDirectory + "cache/", fileName, cordova.file.externalRootDirectory + "英菲尼迪库存盘点/" + $rootScope.projectCode + "/" + $rootScope.shopCode + $rootScope.shopName + "/在库未在系统统计表", vinfpPhotoName)
                                                                     .then(function (success) {
                                                                         $cordovaToast.showShortBottom('保存成功');
                                                                         $ionicHistory.nextViewOptions({
                                                                             disableAnimate: true,
                                                                             disableBack: true
                                                                         });
-                                                                        $state.go('tab.chats', { vinCode: vinCode }, { reload: true });
+                                                                        $state.go('tab.chats', { vinCode: '0' }, { reload: true });
                                                                     }, function (error) {
-                                                                        //alert(error);
                                                                         $cordovaToast.showShortBottom('保存成功');
                                                                         $ionicHistory.nextViewOptions({
                                                                             disableAnimate: true,
                                                                             disableBack: true
                                                                         });
-                                                                        $state.go('tab.chats', { vinCode: vinCode }, { reload: true });
+                                                                        $state.go('tab.chats', { vinCode: '0' }, { reload: true });
                                                                     });
                                                     } else {
                                                         $cordovaToast.showShortBottom('保存成功');
@@ -603,7 +598,7 @@
                                                             disableAnimate: true,
                                                             disableBack: true
                                                         });
-                                                        $state.go('tab.chats', { vinCode: vinCode }, { reload: true });
+                                                        $state.go('tab.chats', { vinCode: '0' }, { reload: true });
                                                     }
                                                 });
                                 });
@@ -647,13 +642,13 @@
             var carPhotoName = photoNameArray[1];
             var vinfpPhotoName = photoNameArray[2];
 
-            $scope.viewState.vin_img_uri = cordova.file.externalRootDirectory + "英菲尼迪库存盘点/" + $rootScope.shopCode + "/在库未在系统统计表/" + vinPhotoName + "?lastmod=" + (new Date()).toString();
-            $scope.viewState.vinPhotoUri = cordova.file.externalRootDirectory + "英菲尼迪库存盘点/" + $rootScope.shopCode + "/在库未在系统统计表/" + vinPhotoName;
-            $scope.viewState.car_img_uri = cordova.file.externalRootDirectory + "英菲尼迪库存盘点/" + $rootScope.shopCode + "/在库未在系统统计表/" + carPhotoName + "?lastmod=" + (new Date()).toString();
-            $scope.viewState.carPhotoUri = cordova.file.externalRootDirectory + "英菲尼迪库存盘点/" + $rootScope.shopCode + "/在库未在系统统计表/" + carPhotoName;
+            $scope.viewState.vin_img_uri = cordova.file.externalRootDirectory + "英菲尼迪库存盘点/" + $rootScope.projectCode + "/" + $rootScope.shopCode + $rootScope.shopName + "/在库未在系统统计表/" + vinPhotoName + "?lastmod=" + (new Date()).toString();
+            $scope.viewState.vinPhotoUri = cordova.file.externalRootDirectory + "英菲尼迪库存盘点/" + $rootScope.projectCode + "/" + $rootScope.shopCode + $rootScope.shopName + "/在库未在系统统计表/" + vinPhotoName;
+            $scope.viewState.car_img_uri = cordova.file.externalRootDirectory + "英菲尼迪库存盘点/" + $rootScope.projectCode + "/" + $rootScope.shopCode + $rootScope.shopName + "/在库未在系统统计表/" + carPhotoName + "?lastmod=" + (new Date()).toString();
+            $scope.viewState.carPhotoUri = cordova.file.externalRootDirectory + "英菲尼迪库存盘点/" + $rootScope.projectCode + "/" + $rootScope.shopCode + $rootScope.shopName + "/在库未在系统统计表/" + carPhotoName;
             if (vinfpPhotoName != null && vinfpPhotoName != "") {
-                $scope.viewState.vinfp_img_uri = cordova.file.externalRootDirectory + "英菲尼迪库存盘点/" + $rootScope.shopCode + "/在库未在系统统计表/" + vinfpPhotoName + "?lastmod=" + (new Date()).toString();
-                $scope.viewState.vinfpPhotoUri = cordova.file.externalRootDirectory + "英菲尼迪库存盘点/" + $rootScope.shopCode + "/在库未在系统统计表/" + vinfpPhotoName;
+                $scope.viewState.vinfp_img_uri = cordova.file.externalRootDirectory + "英菲尼迪库存盘点/" + $rootScope.projectCode + "/" + $rootScope.shopCode + $rootScope.shopName + "/在库未在系统统计表/" + vinfpPhotoName + "?lastmod=" + (new Date()).toString();
+                $scope.viewState.vinfpPhotoUri = cordova.file.externalRootDirectory + "英菲尼迪库存盘点/" + $rootScope.projectCode + "/" + $rootScope.shopCode + $rootScope.shopName + "/在库未在系统统计表/" + vinfpPhotoName;
             }
         }
 
