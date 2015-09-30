@@ -1,4 +1,4 @@
-﻿<ion-view view-title="在库不在系统">
+﻿<ion-view view-title="在库不在系统" cache-view="false">
     <ion-nav-buttons side="secondary">
         <button class="button" ng-click="btnSaveClick()">
             保存
@@ -8,7 +8,7 @@
         <div class="list">
             <label class="item item-input">
                 <span class="input-label">VIN号码</span>
-                <input type="text" placeholder="输入VIN号码" ng-model="viewState.vinCode">
+                <input type="text" placeholder="输入VIN号码" ng-model="viewState.vinCode" ng-change="vinCodeChanged();">
             </label>
             <label class="item item-input item-select">
                 <span class="input-label">车型</span>

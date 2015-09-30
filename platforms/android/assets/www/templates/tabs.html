@@ -11,7 +11,7 @@ navigation history that also transitions its views in and out.
     </ion-tab>
 
   <!-- Chats Tab -->
-    <ion-tab ng-click="rt($event, 1)" title="在库不在系统" icon-off="ion-ios-plus-outline" icon-on="ion-ios-plus" href="#/tab/chats/">
+    <ion-tab ng-click="rt($event, 1);go2();" title="在库不在系统" icon-off="ion-ios-plus-outline" icon-on="ion-ios-plus" >
         <ion-nav-view name="tab-chats"></ion-nav-view>
     </ion-tab>
 

@@ -51,12 +51,15 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', '
         url: "/tab",
         abstract: true,
         templateUrl: "templates/tabs.html",
-        controller: function ($scope, $ionicTabsDelegate, $ionicHistory) {
+        controller: function ($scope, $ionicTabsDelegate, $ionicHistory, $state) {
             $scope.rt = function (e, index) {
                 $ionicTabsDelegate.select(index);
                 //e.preventDefault();
                 $ionicHistory.nextViewOptions({ historyRoot: true });
             };
+            $scope.go2 = function () {
+                $state.go('tab.chats', { vinCode: '0' }, { reload: true });
+            }
         }
     })
 
@@ -81,7 +84,8 @@ angular.module('starter', ['ionic', 'starter.controllers', 'starter.services', '
     }
 })
   .state('tab.chats', {
-      url: '/chats/:timeStamp',
+      cache: false,
+      url: '/chats/:vinCode',
       views: {
           'tab-chats': {
               templateUrl: 'templates/tab-chats.html',

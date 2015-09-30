@@ -130,7 +130,7 @@
             });
         },
         initData: function (vinCode, callback) {
-            SqliteHelper.execute("select remark,photoname from answer where projectcode=? and shopcode=? and vincode=?", [$rootScope.projectCode, $rootScope.shopCode, vinCode], function (res) {
+            SqliteHelper.execute("select vincode,modelname as CarTypeName,remark,photoname from answer where projectcode=? and shopcode=? and vincode=?", [$rootScope.projectCode, $rootScope.shopCode, vinCode], function (res) {
                 if (res.rows.length > 0) {
                     callback(res.rows.item(0));
                 }
@@ -149,16 +149,16 @@
         },
         saveVINCode: function (vinCode, carType, note, vinPhotoName, carPhotoName, vinfpPhotoName, callback) {
             var photoName = vinPhotoName + ';' + carPhotoName + ';' + vinfpPhotoName;
-            SqliteHelper.execute("select vincode,vincode8 from answer where projectcode=? and shopcode=? and vincode=?", [$rootScope.projectCode, $rootScope.shopCode, vinCode], function (res) {
+            SqliteHelper.execute("select vincode,vincode8,addchk from answer where projectcode=? and shopcode=? and vincode=?", [$rootScope.projectCode, $rootScope.shopCode, vinCode], function (res) {
                 if (res.rows.length > 0) {//update
-                    //if (res.rows.item(0).AddChk == 'N') {
-                    //    callback('清单列表中已存在');
-                    //    return;
-                    //}
-                    //SqliteHelper.execute("update answer set modelname=?,remark=?,photoname=? where projectcode=? and shopcode=? and vincode=?", [carType, note, photoName, $rootScope.projectCode, $rootScope.shopCode, vinCode], function (res) {
-                    //    callback('更新成功');
-                    //});
-                    callback('VIN号码已存在');
+                    if (res.rows.item(0).AddChk == 'N') {
+                        callback('清单列表中已存在');
+                        return;
+                    }
+                    SqliteHelper.execute("update answer set modelname=?,remark=?,photoname=? where projectcode=? and shopcode=? and vincode=?", [carType, note, photoName, $rootScope.projectCode, $rootScope.shopCode, vinCode], function (res) {
+                        callback('保存成功');
+                    });
+                    //callback('VIN号码已存在');
                 } else {//Insert
                     SqliteHelper.execute("insert into answer(projectcode,shopcode,vincode,vincode8,modelname,saleflag,photoname,remark,addchk,inuserid,indatetime) values(?,?,?,?,?,?,?,?,?,?,?)",
                                          [$rootScope.projectCode, $rootScope.shopCode, vinCode, vinCode.substring(vinCode.length - 8), carType, 'Y', photoName, note, 'Y', 'mobile_device', 'datetime()'], function (res) {
