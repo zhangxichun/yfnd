@@ -29,8 +29,10 @@
         $cordovaSplashscreen.hide();
     });
 
-    $scope.checkShopName = function (shopCode) {
-        Login.checkShopName(shopCode, function (res) {
+    $scope.checkShopName = function () {
+        alert($scope.viewState.shopCode);
+        Login.checkShopName($scope.viewState.shopCode, function (res) {
+            alert(res.rows.length);
             if (res.rows.length > 0) {
                 $scope.viewState.shopName = res.rows.item(0).ShopName;
             }
